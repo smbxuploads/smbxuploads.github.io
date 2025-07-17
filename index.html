@@ -1,10 +1,186 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>a</title>
+    <meta charset="UTF-8">
+    <title>Dueling Trials</title>
+    <style>
+        html, body{
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            width: 100%;
+            height: 100%;
+            font-family: Arial, sans-serif;
+        }
+
+        canvas{
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: -1;
+        }
+
+        body{
+            background: url('bg.png') no-repeat center center fixed;
+            background-size: cover;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .content-box{
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 2rem;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
+            max-width: 500px;
+            line-height: 1.6;
+            position: relative;
+            transform: scale(0.8);
+            transform-origin: center;
+        }
+
+        .content-box h1,
+        .content-box p,
+        .content-box h2{
+            position: relative;
+            top: 9px; /*move all text up here*/
+        }
+
+        .content-box h1{
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: #aff4ff;
+            text-shadow: 0 2px 5px rgba(0, 0, 0, 0.8);
+        }
+
+        .content-box p{
+            margin: 0.5rem 0;
+        }
+
+        .footer-text{
+            color: rgba(255, 255, 255, 0.25);
+            font-size: 0.8rem;
+            position: absolute;
+            bottom: 0rem;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            white-space: nowrap;
+            top: auto;
+        }
+
+        .footer-text:last-of-type{
+            top: auto;
+            bottom: -2rem;
+        }
+    </style>
 </head>
 <body>
-    <h1>b</h1>
-    <p>c</p>
+<canvas id="iconCanvas"></canvas>
+    <div class="content-box">
+        <h1>Dueling Trials</h1>
+        <p style="font-size: 1.6em;"><strong>Created by Zenetal</strong></p>
+        <p>2018-2025</p>
+        <h2>Graphics</h2>
+        <p>Made and patched by Sednaiur, PROX,</p>
+        <p>DARKMECHA, h2643 and Zenetal</p>
+        <h2>Music</h2>
+        <p>None of the music is by Zenetal; some</p>
+        <p>credits can be found in the files</p>
+        <p class="footer-text">More detailed credits can be found in the episode<br>folder and in some specific levels</p>
+    </div>
+<script>
+const canvas = document.getElementById("iconCanvas");
+const ctx = canvas.getContext("2d");
+
+const icons = [];
+const iconImg = new Image();
+iconImg.src = "icons.png";
+const bgImg = new Image();
+bgImg.src = "bg.png";
+
+const bgSpeedX = -0.2;
+const bgSpeedY = 0.6;
+const iconSize = 128;
+const spacing = 128;
+
+let cols, rows; //grid
+
+function setupIcons(){
+    icons.length = 0;
+    const screenWidth = canvas.width;
+    const screenHeight = canvas.height;
+    
+    cols = Math.ceil(screenWidth / spacing) + 2;
+    rows = Math.ceil(screenHeight / spacing) + 2;
+
+    //from intro.lvlx luna.lua
+    for (let j = -1; j <= rows; j++){
+        for (let i = -1; i <= cols; i++){
+            //offset calculation
+            const offsetX = (Math.abs(j) % 2 === 1) ? spacing / 2 : 0;
+            icons.push({
+              //x: i * spacing + offsetX, //old
+                x: i * spacing,
+                y: j * spacing,
+                row: j //[new] track row for proper wrapping
+            });
+        }
+    }
+}
+
+function updateAndDraw(){
+    //draw background
+    ctx.drawImage(bgImg, 0, 0, canvas.width, canvas.height);
+    
+    //update and draw icons
+    for (const icn of icons){
+        ctx.drawImage(iconImg, icn.x, icn.y, iconSize, iconSize);
+        
+        //movement
+        icn.x += bgSpeedX;
+        icn.y += bgSpeedY;
+
+        //wrapping that maintains the pattern
+        const totalWidth = (cols + 2) * spacing;
+        const totalHeight = (rows + 2) * spacing;
+        
+        if (icn.x < -spacing){
+            icn.x += totalWidth;
+        } else if (icn.x > (cols + 1) * spacing){
+            icn.x -= totalWidth;
+        }
+
+        if (icn.y > (rows + 1) * spacing){
+            icn.y -= totalHeight;
+            icn.row -= (rows + 2);
+        } else if (icn.y < -spacing){
+            icn.y += totalHeight;
+            icn.row += (rows + 2);
+        }
+    }
+
+    requestAnimationFrame(updateAndDraw);
+}
+
+function resizeCanvas(){
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    setupIcons();
+}
+
+window.addEventListener("resize", resizeCanvas);
+
+Promise.all([
+    new Promise(resolve => {iconImg.onload = resolve;}),
+    new Promise(resolve => {bgImg.onload = resolve;})
+]).then(() => {
+    resizeCanvas();
+    updateAndDraw();
+});
+</script>
 </body>
 </html>
